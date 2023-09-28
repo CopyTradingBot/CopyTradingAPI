@@ -1,0 +1,407 @@
+openapi: "3.0.2"
+info:
+  title: "Copy Trading Bot API"
+  description: "API for managing user account, portfolio, and settings"
+  version: "1.0"
+servers:
+  - url: https://api.server.test/v1
+    description: Server description
+paths:
+  /users:
+    get:
+      description: "Get all users' details"
+      responses:
+        "200":
+          description: "Successful response"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ExtendedUserData"
+    post:
+      description: "Create a new user"
+      requestBody:
+        description: "User profile data"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BasicUserData"
+      responses:
+        "200":
+          description: "User created successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExtendedUserData"
+  /users/{id}:
+    get:
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      description: "Retrieves details of a specific user"
+      responses:
+        "200":
+          description: "Successful response"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExtendedUserData"
+    put:
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      summary: "Update user profile"
+      description: "Updates user profile information."
+      requestBody:
+        description: "User profile data"
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                name:
+                  type: "string"
+                email:
+                  type: "string"
+      responses:
+        "200":
+          description: "Successful update"
+        "400":
+          description: "Bad request"
+        "404":
+          description: "User not found"
+
+  /users/{id}/monitored-addresses:
+    get:
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      summary: "Get monitored blockchain addresses"
+      description: "Retrieves a list of blockchain addresses monitored by a user."
+      responses:
+        "200":
+          description: "Successful response"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  type: "string"
+
+    post:
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      summary: "Add blockchain address"
+      description: "Adds a new blockchain address to a user's monitored list."
+      requestBody:
+        description: "Blockchain address to be added"
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                address:
+                  type: "string"
+      responses:
+        "201":
+          description: "Address successfully added"
+        "400":
+          description: "Bad request"
+        "404":
+          description: "User not found"
+
+  /users/{id}/transactions:
+    get:
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      summary: "Get user transactions"
+      description: "Retrieves a list of transactions (copied trades) for a user's monitored addresses."
+      responses:
+        "200":
+          description: "Successful response"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/BasicTransactionData"
+
+    post:
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      summary: "Initiate transaction"
+      description: "Initiates a new transaction (copy trade) for a user's monitored addresses."
+      requestBody:
+        description: "Transaction data"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BasicTransactionData"
+      responses:
+        "201":
+          description: "Transaction initiated"
+        "400":
+          description: "Bad request"
+        "404":
+          description: "User not found"
+  /users/{id}/transactions/{transactionId}:
+    get:
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+        - $ref: "#/components/parameters/TransactionId"
+      summary: "Get a user transaction"
+      description: "Retrieves a specific transaction for a user's monitored addresses."
+      responses:
+        "200":
+          description: "Successful response"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BasicTransactionData"
+
+    put:
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+        - $ref: "#/components/parameters/TransactionId"
+      summary: "Update transaction"
+      description: "Updates an existing transaction (copy trade) for a user's monitored addresses."
+      requestBody:
+        description: "Transaction data"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BasicTransactionData"
+      responses:
+        "201":
+          description: "Transaction updated"
+        "400":
+          description: "Bad request"
+        "404":
+          description: "User not found"
+  /users/{id}/bots:
+    get:
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      summary: "Retrieve all bots"
+      description: "Retrieves all bots that a user has created"
+      responses:
+        "200":
+          description: "Successful response"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/BasicBotData"
+    post:
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      summary: "Initiate new bot"
+      description: Initate a new bot to handle a monitored address"
+      requestBody:
+        description: "Bot data"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BasicBotData"
+      responses:
+        "201":
+          description: "Bot successfully created"
+  /users/{id}/bots/{botId}:
+    get:
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+        - $ref: "#/components/parameters/BotId"
+      summary: "Retrieve a bot"
+      description: "Retrieves a specific bots affiliated to a user"
+      responses:
+        "200":
+          description: "Successful response"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BasicBotData"
+    delete:
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+        - $ref: "#/components/parameters/BotId"
+      summary: "Delete a bot"
+      description: "Deletes a bot given its unique id"
+      responses:
+        "200":
+          description: "Bot deleted successfully"
+
+components:
+  schemas:
+    BasicUserData:
+      type: "object"
+      properties:
+        name:
+          type: "string"
+        email:
+          type: "string"
+
+    AccountSettings:
+      type: "object"
+      properties:
+        security:
+          type: "object"
+          properties:
+            enable2FA:
+              type: "boolean"
+        notificationSettings:
+          type: "object"
+          properties:
+            frequency:
+              type: "string" # TODO: convert to enum
+            eventType:
+              type: "string" # TODO: convert to enum
+        communicationChannels:
+          type: "object"
+          properties:
+            email:
+              type: "object"
+              properties:
+                emailList:
+                  type: "array"
+                  items:
+                    type: "object"
+                    properties:
+                      enabled:
+                        type: "boolean"
+                      email:
+                        type: "string" # TODO: phone number formatting
+            sms:
+              type: "object"
+              properties:
+                phoneNumberList:
+                  type: "array"
+                  items:
+                    type: "object"
+                    properties:
+                      enabled:
+                        type: "boolean"
+                      phoneNumber:
+                        type: "string" # TODO: phone number formatting
+
+    TradingSettings:
+      type: "object"
+      properties:
+        riskSettings:
+          type: "object"
+          properties:
+            lossLimit:
+              type: number
+            maxCapitalPercentage:
+              type: number
+        assetWhiteList:
+          type: "array"
+          items:
+            type: string
+
+    PortfolioData:
+      type: "object"
+      properties:
+        balance:
+          type: "array"
+          items:
+            type: "object"
+            properties:
+              assetType:
+                type: "string"
+              amount:
+                type: number
+
+    ExtendedUserData:
+      allOf:
+        - $ref: "#/components/schemas/BasicUserData"
+        - type: "object"
+          properties:
+            userId:
+              type: "string"
+            userCreatedAt:
+              type: "string"
+              format: "date"
+            accountSettings:
+              $ref: "#/components/schemas/AccountSettings"
+            tradingSettings:
+              $ref: "#/components/schemas/TradingSettings"
+            portfolio:
+              $ref: "#/components/schemas/PortfolioData"
+            transactions:
+              type: "array"
+              items:
+                type: string
+            wallets:
+              type: "array"
+              items:
+                type: "string"
+            bots:
+              type: "array"
+              items:
+                type: "string"
+
+    BasicTransactionData:
+      type: "object"
+      properties:
+        userId:
+          type: "string"
+        transactionId:
+          type: "string"
+        botId:
+          type: "string"
+        source_address:
+          type: "string"
+        destination_address:
+          type: "string"
+        amount:
+          type: "number"
+        asset:
+          type: "string"
+        eventType: # TODO: Change to enum
+          type: "string"
+        status:
+          type: "string"
+    BasicBotData:
+      type: "object"
+      properties:
+        botId:
+          type: "string"
+        userId:
+          type: "string"
+        monitored_address:
+          type: "string"
+        portfolio:
+          $ref: "#/components/schemas/PortfolioData"
+        transactionHistory:
+          type: "array"
+          items:
+            type: string
+        status: #TODO: Change to enum
+          type: "string"
+  parameters:
+    UserId:
+      name: "id"
+      in: "path"
+      required: true
+      schema:
+        type: "string"
+      description: "User ID"
+    TransactionId:
+      name: "transactionId"
+      in: "path"
+      required: true
+      schema:
+        type: "string"
+      description: "Transaction ID"
+    BotId:
+      name: "botId"
+      in: "path"
+      required: true
+      schema:
+        type: "string"
+      description: "Bot ID"
